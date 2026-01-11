@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  app:
+    build: ./app
+    environment:
+      ENV_NAME: ${ENV_NAME:-local}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz').read()\""
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  proxy:
+    build: ./nginx
+    depends_on:
+      - app
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/healthz >/dev/null"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
